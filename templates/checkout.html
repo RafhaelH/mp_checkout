@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout PycodeBR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+  <div class="relative w-full max-w-md">
+    <!-- Overlay de carregamento e confirmação -->
+    <div id="overlay" class="absolute inset-0 z-50 bg-white bg-opacity-90 flex flex-col items-center justify-center space-y-4 rounded-xl shadow-lg hidden transition-all duration-500">
+      <div id="spinner" class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <!-- Centralizar texto e ícones -->
+      <div id="overlay-text" class="flex flex-col items-center text-center text-lg font-medium text-gray-700">
+        Processando pagamento...
+      </div>
+      <button id="new-payment-btn" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden z-50">Fazer novo pagamento</button>
+    </div>
+
+    <div id="checkout-container" class="relative bg-white rounded-xl shadow-md p-6 transition-opacity duration-500">
+      <h1 class="text-2xl font-semibold text-center mb-6">Checkout PycodeBR</h1>
+      <form id="payment-form" class="space-y-4">
+        <div class="flex justify-center space-x-6">
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="payment_method" value="card" checked class="text-blue-600">
+            <span>Cartão de Crédito</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="payment_method" value="pix" class="text-green-600">
+            <span>PIX</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="payment_method" value="boleto" class="text-yellow-600">
+            <span>Boleto</span>
+          </label>
+        </div>
+
+        <!-- Cartão -->
+        <div id="card-fields" class="space-y-3">
+          <input type="text" name="card_number" placeholder="Número do Cartão" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <div class="grid grid-cols-3 gap-2">
+            <input type="text" name="expiration_month" placeholder="MM" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" name="expiration_year" placeholder="AAAA" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" name="security_code" placeholder="CVC" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <input type="text" name="cardholder_name" placeholder="Nome no Cartão" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="number" name="installments" placeholder="Parcelas" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- PIX -->
+        <div id="pix-fields" class="hidden space-y-3">
+          <p class="text-gray-700 text-center">Você receberá um QR Code para pagar via PIX.</p>
+          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+
+        <!-- Boleto -->
+        <div id="boleto-fields" class="hidden space-y-3">
+          <input type="text" name="first_name" placeholder="Primeiro nome" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="last_name" placeholder="Sobrenome" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="zip_code" placeholder="CEP" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="street_name" placeholder="Logradouro" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="street_number" placeholder="Número" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="neighborhood" placeholder="Bairro" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="city" placeholder="Cidade" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <input type="text" name="federal_unit" placeholder="Estado (UF)" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+        </div>
+
+        <!-- Comuns -->
+        <input type="email" name="email" placeholder="Seu e-mail" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="number" name="transaction_amount" placeholder="Valor (R$)" value="100" step="0.01" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" name="description" placeholder="Descrição" value="Teste de Pagamento" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition">Pagar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('payment-form');
+      const cardFields = document.getElementById('card-fields');
+      const pixFields = document.getElementById('pix-fields');
+      const boletoFields = document.getElementById('boleto-fields');
+      const overlay = document.getElementById('overlay');
+      const spinner = document.getElementById('spinner');
+      const overlayText = document.getElementById('overlay-text');
+      const checkoutContainer = document.getElementById('checkout-container');
+      const newPaymentBtn = document.getElementById('new-payment-btn');
+
+      const cardInputs = Array.from(cardFields.querySelectorAll('input'));
+      const pixInputs = Array.from(pixFields.querySelectorAll('input'));
+      const boletoInputs = Array.from(boletoFields.querySelectorAll('input'));
+      cardInputs.forEach(i => i.disabled = false);
+      pixInputs.forEach(i => i.disabled = true);
+      boletoInputs.forEach(i => i.disabled = true);
+
+      form.querySelectorAll("input[name='payment_method']").forEach(radio => {
+        radio.addEventListener('change', () => {
+          const method = radio.value;
+          cardFields.classList.toggle('hidden', method !== 'card');
+          pixFields.classList.toggle('hidden', method !== 'pix');
+          boletoFields.classList.toggle('hidden', method !== 'boleto');
+          cardInputs.forEach(i => i.disabled = method !== 'card');
+          pixInputs.forEach(i => i.disabled = method !== 'pix');
+          boletoInputs.forEach(i => i.disabled = method !== 'boleto');
+        });
+      });
+
+      function showStatus(success, message) {
+        checkoutContainer.classList.add('opacity-0', 'pointer-events-none');
+        overlay.classList.remove('bg-white', 'bg-opacity-90');
+        overlay.classList.add(success ? 'bg-green-100' : 'bg-red-100');
+        spinner.classList.add('hidden');
+        // Centragem dos ícones e mensagens
+        overlayText.innerHTML = success
+          ? `<div class="flex flex-col items-center"><div class="text-8xl text-green-600 animate-ping">🎉</div><p class="mt-4 text-2xl font-bold text-green-800">${message}</p></div>`
+          : `<div class="flex flex-col items-center"><div class="text-8xl text-red-600 animate-shake">⚠️</div><p class="mt-4 text-2xl font-bold text-red-800">${message}</p></div>`;
+        newPaymentBtn.classList.remove('hidden');
+      }
+
+      newPaymentBtn.addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        newPaymentBtn.classList.add('hidden');
+        checkoutContainer.classList.remove('opacity-0', 'pointer-events-none');
+        checkoutContainer.classList.remove('opacity-50');
+        form.reset();
+        cardInputs.forEach(i => i.disabled = false);
+        pixInputs.forEach(i => i.disabled = true);
+        boletoInputs.forEach(i => i.disabled = true);
+        overlay.classList.add('bg-white', 'bg-opacity-90');
+        overlay.classList.remove('bg-green-100', 'bg-red-100');
+        overlayText.textContent = 'Processando pagamento...';
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        overlay.classList.remove('hidden');
+        spinner.classList.remove('hidden');
+        overlayText.textContent = 'Processando pagamento...';
+        checkoutContainer.classList.add('opacity-50');
+
+        const payload = {};
+        new FormData(form).forEach((value, key) => payload[key] = value);
+
+        try {
+          const res = await fetch('/create_payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          // Boleto
+          if (payload.payment_method === 'boleto' && json.transaction_details?.external_resource_url) {
+            window.location.href = json.transaction_details.external_resource_url;
+            return;
+          }
+          // PIX
+          if (payload.payment_method === 'pix' && json.point_of_interaction?.transaction_data?.ticket_url) {
+            window.location.href = json.point_of_interaction.transaction_data.ticket_url;
+            return;
+          }
+          // Cartão
+          showStatus(json.status === 'approved', json.status === 'approved' ? 'Pagamento Aprovado!' : 'Pagamento Recusado');
+
+        } catch (err) {
+          showStatus(false, 'Erro na requisição');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
